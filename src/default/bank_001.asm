@@ -53,7 +53,7 @@ ENDC
     call Call_001_46ac                            ; $4056: $cd $ac $46
 IF DEF(MENU_CN) || DEF(MENU_108_CN)
     call Call_001_44b8
-ELSE
+ELIF !DEF(MENU_16)
     call Call_001_4287                            ; $4059: $cd $87 $42
     call Call_001_4287                            ; $405c: $cd $87 $42
 ENDC
@@ -365,7 +365,7 @@ Jump_001_40ef:
     ld [wSelectedROMinPage], a                                 ; $40fe: $ea $b3 $c0
 IF DEF(MENU_CN) || DEF(MENU_108_CN)
     call Call_001_44b8
-ELSE
+ELIF !DEF(MENU_16)
     call Call_001_4287                            ; $4101: $cd $87 $42
 ENDC
     call LCD_Wait                                 ; $4104: $cd $42 $42
@@ -410,7 +410,9 @@ Jump_001_413c:
     call Call_001_42b3                            ; $4140: $cd $b3 $42
     xor a                                         ; $4143: $af
     ld [wSelectedROMinPage], a                                 ; $4144: $ea $b3 $c0
+IF !DEF(MENU_16)
     call Call_001_4287                            ; $4147: $cd $87 $42
+ENDC
     xor a                                         ; $414a: $af
     ld [wSelectedROMinPage], a                                 ; $414b: $ea $b3 $c0
     call Call_001_46ac                            ; $414e: $cd $ac $46
@@ -448,7 +450,7 @@ jr_001_4176:
     pop af                                        ; $417a: $f1
     ld [wSelectedROMinPage], a                                 ; $417b: $ea $b3 $c0
     call Call_001_46ac                            ; $417e: $cd $ac $46
-IF !DEF(MENU_CN) && !DEF(MENU_108_CN)
+IF !DEF(MENU_CN) && !DEF(MENU_108_CN) && !DEF(MENU_16)
     call Call_001_4287                            ; $4181: $cd $87 $42
 ENDC
     ret                                           ; $4184: $c9
@@ -459,7 +461,9 @@ jr_001_4185:
     ld a, ROMS_PER_PAGE - 1                       ; $4188: $3e $05
     ld [wSelectedROMinPage], a                    ; $418a: $ea $b3 $c0
     call Call_001_46ac                            ; $418d: $cd $ac $46
+IF !DEF(MENU_16)
     call Call_001_4287                            ; $4190: $cd $87 $42
+ENDC
     ret                                           ; $4193: $c9
 
 
@@ -473,7 +477,9 @@ jr_001_4194:
     call Call_001_46ac                            ; $419e: $cd $ac $46
     pop af                                        ; $41a1: $f1
     ld [wSelectedROMinPage], a                                 ; $41a2: $ea $b3 $c0
+IF !DEF(MENU_16)
     call Call_001_4287                            ; $41a5: $cd $87 $42
+ENDC
     ret                                           ; $41a8: $c9
 
 
@@ -508,7 +514,9 @@ jr_001_41bd:
     xor a                                         ; $41cd: $af
     ld [wSelectedROMinPage], a                    ; $41ce: $ea $b3 $c0
     call Call_001_46ac                            ; $41d1: $cd $ac $46
+IF !DEF(MENU_16)
     call Call_001_4287                            ; $41d4: $cd $87 $42
+ENDC
     ret                                           ; $41d7: $c9
 
 
@@ -521,7 +529,9 @@ jr_001_41d8:
     ld a, $00                                     ; $41e2: $3e $00
     ld [wSelectedROMinPage], a                    ; $41e4: $ea $b3 $c0
     call Call_001_46ac                            ; $41e7: $cd $ac $46
+IF !DEF(MENU_16)
     call Call_001_4287                            ; $41ea: $cd $87 $42
+ENDC
     ret                                           ; $41ed: $c9
 
 
@@ -535,17 +545,23 @@ jr_001_41ee:
     call Call_001_46ac                            ; $41fc: $cd $ac $46
     pop af                                        ; $41ff: $f1
     ld [wSelectedROMinPage], a                    ; $4200: $ea $b3 $c0
+IF !DEF(MENU_16)
     call Call_001_4287                            ; $4203: $cd $87 $42
+ENDC
     ret                                           ; $4206: $c9
 
 
 Call_001_4207:
 IF DEF(MENU_CN) || DEF(MENU_108_CN)
     ld de, $100a
+    ld hl, $9882
+ELIF DEF(MENU_16)
+    ld de, $100e
+    ld hl, $98a2
 ELSE
     ld de, $120b                                  ; $4207: $11 $0b $12
-ENDC
     ld hl, $9882                                  ; $420a: $21 $82 $98
+ENDC
 
 jr_001_420d:
     push hl                                       ; $420d: $e5
@@ -641,10 +657,15 @@ MenuTitle::
 PrintTitles::
     ld hl, $9822                                  ; $427d: $21 $22 $98
     ld bc, MenuTitle                              ; $4280: $01 $6d $42
+IF DEF(MENU_16)
+    call Call_001_4300
+ELSE
     call PrintGameTitle                           ; $4283: $cd $6f $43
+ENDC
     ret                                           ; $4286: $c9
+ENDC
 
-
+IF !DEF(MENU_CN) && !DEF(MENU_108_CN) && !DEF(MENU_16)
 Call_001_4287:
 IF DEF(MENU) || DEF(MENU_61) || DEF(MENU_108)
     ld de, $00dc
@@ -685,7 +706,11 @@ Jump_001_42aa:
 ENDC
 
 Call_001_42b3:
+IF DEF(MENU_16)
+    ld hl, $98a2
+ELSE
     ld hl, $9882                                  ; $42b3: $21 $82 $98
+ENDC
     ld de, $0010                                  ; $42b6: $11 $10 $00
     xor a                                         ; $42b9: $af
     ld [wSelectedROMinPage], a                                 ; $42ba: $ea $b3 $c0
@@ -722,7 +747,7 @@ Jump_001_42e5:
     pop de                                        ; $42e7: $d1
     pop hl                                        ; $42e8: $e1
     push hl                                       ; $42e9: $e5
-IF DEF(MENU_CN) || DEF(MENU_108_CN)
+IF DEF(MENU_CN) || DEF(MENU_108_CN) || DEF(MENU_16)
     call Call_001_4300
 ELSE
     call PrintGameTitle                           ; $42ea: $cd $6f $43
@@ -748,7 +773,7 @@ Jump_001_42ff:
 
 
 Call_001_4300:
-IF DEF(MENU_CN) || DEF(MENU_108_CN)
+IF DEF(MENU_CN) || DEF(MENU_108_CN) || DEF(MENU_16)
     ld a, $10
 ELSE
     ld a, $14                                     ; $4300: $3e $14
@@ -771,7 +796,7 @@ Jump_001_430e:
     cp $3a                                        ; $4313: $fe $3a
     jp nc, Jump_001_431d                          ; $4315: $d2 $1d $43
 
-IF DEF(MENU_CN) || DEF(MENU_108_CN)
+IF DEF(MENU_CN) || DEF(MENU_108_CN) || DEF(MENU_16)
     add $50
 ELSE
     add $80                                       ; $4318: $c6 $80
@@ -786,7 +811,7 @@ Jump_001_431d:
     cp $5b                                        ; $4322: $fe $5b
     jp nc, Jump_001_432c                          ; $4324: $d2 $2c $43
 
-IF DEF(MENU_CN) || DEF(MENU_108_CN)
+IF DEF(MENU_CN) || DEF(MENU_108_CN) || DEF(MENU_16)
     add $50
 ELSE
     add $80                                       ; $4327: $c6 $80
@@ -795,7 +820,7 @@ ENDC
 
 
 Jump_001_432c:
-IF !DEF(MENU_CN) && !DEF(MENU_108_CN)
+IF !DEF(MENU_CN) && !DEF(MENU_108_CN) && !DEF(MENU_16)
     nop                                           ; $432c: $00
 ENDC
 
@@ -829,7 +854,7 @@ LoadFont::
     or e                                          ; $434f: $b3
     jp nz, .copy_loop                             ; $4350: $c2 $43 $43
 
-IF DEF(MENU_CN) || DEF(MENU_108_CN) ; copy font only once
+IF DEF(MENU_CN) || DEF(MENU_108_CN) || DEF(MENU_16) ; copy font only once
     ret
 ELSE
 
@@ -1422,7 +1447,7 @@ CopyVRAMData:
 
 LoadBackgroundMap::
     ld hl, $9800                                  ; $4643: $21 $00 $98
-IF DEF(MENU_CN) || DEF(MENU_108_CN)
+IF DEF(MENU_CN) || DEF(MENU_108_CN) || DEF(MENU_16)
     ld de, $0414
 ELSE
     ld de, $1214                                  ; $4646: $11 $14 $12
@@ -1509,7 +1534,11 @@ jr_001_46ab:
     ret                                           ; $46ab: $c9
 
 Call_001_46ac:
+IF DEF(MENU_16)
+    ld hl, $98a1
+ELSE
     ld hl, $9881                                  ; $46ac: $21 $81 $98
+ENDC
     ld a, [wSelectedROMinPage]                    ; $46af: $fa $b3 $c0
     ld e, a                                       ; $46b2: $5f
     xor a                                         ; $46b3: $af
@@ -1536,7 +1565,11 @@ ENDC
 
 
 Call_001_46d5:
+IF DEF(MENU_16)
+    ld hl, $98a1
+ELSE
     ld hl, $9881                                  ; $46d5: $21 $81 $98
+ENDC
     ld a, [wSelectedROMinPage]                    ; $46d8: $fa $b3 $c0
     ld e, a                                       ; $46db: $5f
     xor a                                         ; $46dc: $af

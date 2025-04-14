@@ -43,7 +43,11 @@ SECTION "SerialTransferCompleteInterrupt", ROM0[$58]
 SerialTransferCompleteInterrupt::
     reti
 
-INCLUDE "JoypadTransitionInterrupt.asm"
+SECTION "JoypadTransitionInterrupt", ROM0[$60]
+JoypadTransitionInterrupt::
+    reti
+
+INCLUDE "pre_header_code.asm"
 
 SECTION "Boot", ROM0[$100]
 Boot::
