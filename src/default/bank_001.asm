@@ -1183,7 +1183,7 @@ Jump_001_44da:
     ld e, a                                       ; $44dd: $5f
     xor a                                         ; $44de: $af
     ld d, a                                       ; $44df: $57
-    ld hl, GraphicData+$168;  $4cd8               ; $44e0: $21 $d8 $4c
+    ld hl, UnknownData2;  $4cd8               ; $44e0: $21 $d8 $4c
     add hl, de                                    ; $44e3: $19
     ld a, [hl]                                    ; $44e4: $7e
     ld c, a                                       ; $44e5: $4f
@@ -1253,7 +1253,7 @@ Jump_001_4533:
 
 Jump_001_4536:
     ld [$c0b4], a                                 ; $4536: $ea $b4 $c0
-    ld hl, GraphicData+$168 ; $4cd8               ; $4539: $21 $d8 $4c
+    ld hl, UnknownData2 ; $4cd8               ; $4539: $21 $d8 $4c
     ld c, a                                       ; $453c: $4f
     xor a                                         ; $453d: $af
     ld b, a                                       ; $453e: $47
@@ -1265,7 +1265,7 @@ Jump_001_4536:
     jp z, Jump_001_456a                           ; $4549: $ca $6a $45
 
     ld bc, $0000                                  ; $454c: $01 $00 $00
-    ld hl, GraphicData+$168 ; $4cd8               ; $454f: $21 $d8 $4c
+    ld hl, UnknownData2 ; $4cd8               ; $454f: $21 $d8 $4c
 
 Jump_001_4552:
     ld a, [hl+]                                   ; $4552: $2a
@@ -1310,11 +1310,7 @@ Jump_001_4573:
     rl b                                          ; $458a: $cb $10
     sla c                                         ; $458c: $cb $21
     rl b                                          ; $458e: $cb $10
-IF DEF(MENU_CN) || DEF(MENU_108_CN)
     ld hl, SubtitleCharacters
-ELSE
-    ld hl, GraphicData+$1dc; $4d4c                ; $4590: $21 $4c $4d
-ENDC
     add hl, bc                                    ; $4593: $09
     ld de, $0020                                  ; $4594: $11 $20 $00
     pop bc                                        ; $4597: $c1
