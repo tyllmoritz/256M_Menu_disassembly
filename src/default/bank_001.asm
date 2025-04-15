@@ -11,8 +11,10 @@ IF DEF(MENU_61)
 ELSE
     call EnableLCD                                ; $4000: $cd $d0 $43
 ENDC
-    call ClearHRAM                                ; $4003: $cd $a9 $43
-    call ClearWRAM                                ; $4006: $cd $ba $43
+    call ClearWRAM                                ; $4003: $cd $a9 $43
+IF !DEF(MENU_64_CN)
+    call ClearOAM                                ; $4006: $cd $ba $43
+ENDC
     call ClearVRAM                                ; $4009: $cd $86 $44
     xor a                                         ; $400c: $af
     ldh [rSCY], a                                 ; $400d: $e0 $42
@@ -30,10 +32,15 @@ ENDC
     ldh [rLCDC], a                                ; $4025: $e0 $40
     xor a                                         ; $4027: $af
     ldh [rIF], a                                  ; $4028: $e0 $0f
+IF DEF(MENU_64_CN)
+    ldh [rNR52], a
+    call $0000
+ELSE
     xor a                                         ; $402a: $af
     ldh [rNR52], a                                ; $402b: $e0 $26
     ld a, $01                                     ; $402d: $3e $01
     ld [rROMB0], a                                ; $402f: $ea $00 $20
+ENDC
     call LoadGraphicData                          ; $4032: $cd $1b $46
     call LoadFont                                 ; $4035: $cd $3a $43
 IF !DEF(MENU_CN) && !DEF(MENU_108_CN)
@@ -48,19 +55,30 @@ ENDC
     ld a, NUM_PAGES_SETTING                       ; $404a: $3e $03
     ld [wNumPages], a                             ; $404c: $ea $ba $c0
     call Call_001_42b3                            ; $404f: $cd $b3 $42
+IF DEF(MENU_64_CN)
+    ld a, $00
+ELSE
     xor a                                         ; $4052: $af
+ENDC
     ld [wSelectedROMinPage], a                    ; $4053: $ea $b3 $c0
     call Call_001_46ac                            ; $4056: $cd $ac $46
 IF DEF(MENU_CN) || DEF(MENU_108_CN)
     call Call_001_44b8
-ELIF !DEF(MENU_16)
+ELIF !DEF(MENU_16) && !DEF(MENU_64_CN)
     call Call_001_4287                            ; $4059: $cd $87 $42
     call Call_001_4287                            ; $405c: $cd $87 $42
 ENDC
     call Call_001_4469                            ; $405f: $cd $69 $44
     call Call_001_43ef                            ; $4062: $cd $ef $43
-
+IF DEF(MENU_64_CN)
+    pop af
+    ld [$d000], a
+    call $0000
 Jump_001_4065:
+    call $62ce
+ELSE
+Jump_001_4065:
+ENDC
     call Call_001_43f8                            ; $4065: $cd $f8 $43
     ld a, [$c0ae]                                 ; $4068: $fa $ae $c0
     cp $08                                        ; $406b: $fe $08
@@ -106,6 +124,7 @@ ENDC
 
 
 Jump_001_409f:
+IF !DEF(MENU_64_CN)
     cp $10                                        ; $409f: $fe $10
     jp nz, Jump_001_4065_                          ; $40a1: $c2 $a7 $40
 
@@ -113,6 +132,7 @@ IF DEF(MENU_61) || DEF(MENU_108)
     jp LoadAndRunHRAMCode2_
 ELSE
     jp LoadAndRunHRAMCode                              ; $40a4: $c3 $aa $40
+ENDC
 ENDC
 
 
@@ -123,7 +143,7 @@ Jump_001_4065_:
 LoadAndRunHRAMCode:
 IF DEF(MENU_108_CN)
     call EnableLCD                            ; $40a4: $cd $3a $43
-    call ClearWRAM                            ; $40a7: $cd $24 $43
+    call ClearOAM                            ; $40a7: $cd $24 $43
     call ClearVRAM                            ; $40aa: $cd $f0 $43
 ENDC
     di                                            ; $40aa: $f3
@@ -559,8 +579,8 @@ ELIF DEF(MENU_16)
     ld de, $100e
     ld hl, $98a2
 ELSE
-    ld de, $120b                                  ; $4207: $11 $0b $12
-    ld hl, $9882                                  ; $420a: $21 $82 $98
+    ld de, $120b
+    ld hl, $9882 ; bg map adress of first Romname character
 ENDC
 
 jr_001_420d:
@@ -658,7 +678,7 @@ PrintTitles::
     ld hl, $9822                                  ; $427d: $21 $22 $98
     ld bc, MenuTitle                              ; $4280: $01 $6d $42
 IF DEF(MENU_16)
-    call Call_001_4300
+    call WriteLine
 ELSE
     call PrintGameTitle                           ; $4283: $cd $6f $43
 ENDC
@@ -701,7 +721,7 @@ Jump_001_42aa:
     push hl                                       ; $42aa: $e5
     pop bc                                        ; $42ab: $c1
     ld hl, $9a20                                  ; $42ac: $21 $20 $9a
-    call Call_001_4300                            ; $42af: $cd $00 $43
+    call WriteLine                            ; $42af: $cd $00 $43
     ret                                           ; $42b2: $c9
 ENDC
 
@@ -709,7 +729,7 @@ Call_001_42b3:
 IF DEF(MENU_16)
     ld hl, $98a2
 ELSE
-    ld hl, $9882                                  ; $42b3: $21 $82 $98
+    ld hl, $9882 ; bg map adress of first Romname character
 ENDC
     ld de, $0010                                  ; $42b6: $11 $10 $00
     xor a                                         ; $42b9: $af
@@ -720,11 +740,11 @@ Jump_001_42bd:
     ld d, a                                       ; $42c0: $57
     ld a, [wNumItems]                                 ; $42c1: $fa $bc $c0
     cp d                                          ; $42c4: $ba
-    jp z, Jump_001_42ff                           ; $42c5: $ca $ff $42
+    jp z, Return                           ; $42c5: $ca $ff $42
 
     ld a, [wSelectedROMinPage]                                 ; $42c8: $fa $b3 $c0
     cp ROMS_PER_PAGE                                        ; $42cb: $fe $06
-    jp z, Jump_001_42ff                           ; $42cd: $ca $ff $42
+    jp z, Return                           ; $42cd: $ca $ff $42
 
     push hl                                       ; $42d0: $e5
     push de                                       ; $42d1: $d5
@@ -748,83 +768,82 @@ Jump_001_42e5:
     pop hl                                        ; $42e8: $e1
     push hl                                       ; $42e9: $e5
 IF DEF(MENU_CN) || DEF(MENU_108_CN) || DEF(MENU_16)
-    call Call_001_4300
+    call WriteLine
 ELSE
     call PrintGameTitle                           ; $42ea: $cd $6f $43
 ENDC
-    ld hl, wMaxItemInCurrentPage                                  ; $42ed: $21 $bb $c0
+    ld hl, wMaxItemInCurrentPage                  ; $42ed: $21 $bb $c0
     inc [hl]                                      ; $42f0: $34
-    ld hl, wSelectedROMinPage                                  ; $42f1: $21 $b3 $c0
+    ld hl, wSelectedROMinPage                     ; $42f1: $21 $b3 $c0
     inc [hl]                                      ; $42f4: $34
     pop hl                                        ; $42f5: $e1
     push de                                       ; $42f6: $d5
 IF DEF(MENU) || DEF(MENU_61) || DEF(MENU_108) || DEF(MENU_CN) || DEF(MENU_108_CN)
-    ld de, $0020
+    ld de, $0020 ; next line
 ELSE
-    ld de, $0040                                  ; $42f7: $11 $40 $00
+    ld de, $0040 ; next line with spacing
 ENDC
     add hl, de                                    ; $42fa: $19
     pop de                                        ; $42fb: $d1
     jp Jump_001_42bd                              ; $42fc: $c3 $bd $42
 
-
-Jump_001_42ff:
+Return:
     ret                                           ; $42ff: $c9
 
 
-Call_001_4300:
+WriteLine:
 IF DEF(MENU_CN) || DEF(MENU_108_CN) || DEF(MENU_16)
-    ld a, $10
+    ld a, $10 ; characters_per_line
 ELSE
-    ld a, $14                                     ; $4300: $3e $14
+    ld a, $14 ; characters_per_line
 ENDC
-    ld e, a                                       ; $4302: $5f
+    ld e, a
 
-Jump_001_4303:
-    ld a, [bc]                                    ; $4303: $0a
-    cp $20                                        ; $4304: $fe $20
-    jp nz, Jump_001_430e                          ; $4306: $c2 $0e $43
+WriteNextCharacterInLine:
+    ld a, [bc]
+    cp $20
+    jp nz, .printable_ascii
 
-    ld a, $ab                                     ; $4309: $3e $ab
-    jp Jump_001_432d                              ; $430b: $c3 $2d $43
+    ld a, $ab ; whitespace
+    jp WriteCharacterOfRomTitle
 
+.printable_ascii:
+    cp $30
+    jp c, .not_a_number
 
-Jump_001_430e:
-    cp $30                                        ; $430e: $fe $30
-    jp c, Jump_001_431d                           ; $4310: $da $1d $43
+    cp $3a
+    jp nc, .not_a_number
 
-    cp $3a                                        ; $4313: $fe $3a
-    jp nc, Jump_001_431d                          ; $4315: $d2 $1d $43
-
-IF DEF(MENU_CN) || DEF(MENU_108_CN) || DEF(MENU_16)
-    add $50
-ELSE
-    add $80                                       ; $4318: $c6 $80
-ENDC
-    jp Jump_001_432d                              ; $431a: $c3 $2d $43
-
-
-Jump_001_431d:
-    cp $41                                        ; $431d: $fe $41
-    jp c, Jump_001_432c                           ; $431f: $da $2c $43
-
-    cp $5b                                        ; $4322: $fe $5b
-    jp nc, Jump_001_432c                          ; $4324: $d2 $2c $43
-
+; ascii -> tile number for 0-9
 IF DEF(MENU_CN) || DEF(MENU_108_CN) || DEF(MENU_16)
     add $50
 ELSE
-    add $80                                       ; $4327: $c6 $80
+    add $80
 ENDC
-    jp Jump_001_432d                              ; $4329: $c3 $2d $43
+    jp WriteCharacterOfRomTitle
+
+.not_a_number
+    cp $41
+    jp c, WriteCharacterOfRomTitle_
+
+    cp $5b
+    jp nc, WriteCharacterOfRomTitle_
+
+; ascii -> tile number for A-Z
+IF DEF(MENU_CN) || DEF(MENU_108_CN) || DEF(MENU_16)
+    add $50
+ELSE
+    add $80
+ENDC
+    jp WriteCharacterOfRomTitle
 
 
-Jump_001_432c:
+WriteCharacterOfRomTitle_:
 IF !DEF(MENU_CN) && !DEF(MENU_108_CN) && !DEF(MENU_16)
-    nop                                           ; $432c: $00
+    nop
 ENDC
 
-Jump_001_432d:
+WriteCharacterOfRomTitle:
     push af                                       ; $432d: $f5
     call LCD_Wait                                 ; $432e: $cd $42 $42
     pop af                                        ; $4331: $f1
@@ -832,7 +851,7 @@ Jump_001_432d:
     inc hl                                        ; $4333: $23
     inc bc                                        ; $4334: $03
     dec e                                         ; $4335: $1d
-    jp nz, Jump_001_4303                          ; $4336: $c2 $03 $43
+    jp nz, WriteNextCharacterInLine               ; $4336: $c2 $03 $43
 
     ret                                           ; $4339: $c9
 
@@ -840,7 +859,7 @@ Jump_001_432d:
 LoadFont::
     ld bc, Font                                   ; $433a: $01 $51 $72
     ld hl, $8800                                  ; $433d: $21 $00 $88
-    ld de, $0170                                  ; $4340: $11 $70 $01
+    ld de, Font.end - Font
 
 .copy_loop
     ld a, [bc]                                    ; $4343: $0a
@@ -860,7 +879,7 @@ ELSE
 
     ld bc, Font                                   ; $4353: $01 $51 $72
     ld hl, $8b00                                  ; $4356: $21 $00 $8b
-    ld de, $0170                                  ; $4359: $11 $70 $01
+    ld de, Font.end - Font
 
 .copy_loop2
     ld a, [bc]                                    ; $435c: $0a
@@ -930,7 +949,7 @@ PrintCharacter::
     ret                                           ; $43a8: $c9
 ENDC
 
-ClearHRAM::
+ClearWRAM::
     ld hl, $dfff                                  ; $43a9: $21 $ff $df
 IF DEF(MENU_108_CN)
     ld a, $00
@@ -946,7 +965,7 @@ ENDC
     ret                                           ; $43b9: $c9
 
 
-ClearWRAM::
+ClearOAM::
     ld hl, $feff                                  ; $43ba: $21 $ff $fe
     ld b, $00                                     ; $43bd: $06 $00
 .erase_loop
@@ -1401,8 +1420,8 @@ ENDC
         nop
     ENDC
     IF DEF(MENU_108)
-        call ClearHRAM
         call ClearWRAM
+        call ClearOAM
         call ClearVRAM
     ENDC
     pop af                                        ; $4611: $f1
@@ -1615,6 +1634,7 @@ INCLUDE "rom_names.asm"
 
 Font::
     INCBIN "gfx/Font.2bpp"
+.end
 
 IF DEF(MENU)
 	ds $6000 - @, 0x00
