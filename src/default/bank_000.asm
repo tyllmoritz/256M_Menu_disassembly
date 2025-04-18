@@ -3,7 +3,11 @@
 ; https://github.com/mattcurrie/mgbdis
 
 
-INCLUDE "rst_00.asm"
+SECTION "RST_00", ROM0[$0]
+RST_00::
+IF DEF(FIRST_BYTES)
+    db FIRST_BYTES
+ENDC
 
 SECTION "RST_08", ROM0[$8]
 RST_08::
@@ -58,5 +62,18 @@ Header::
 	ds $134	- @, 0xff ; fill header logo with 0xFF
 	ds $14e - @, 0x00 ; fill header with zeroes
 
+HeaderGlobalChecksum::
+IF DEF(GLOBAL_CHECKSUM)
+    db GLOBAL_CHECKSUM
+ELSE
+    db $00, $00
+ENDC
 
-INCLUDE "header_checksum.asm"
+Jump_000_0150:
+
+IF DEF(CREDITS)
+Credits:
+    db CREDITS
+ENDC
+
+INCLUDE "bank0_code.asm"

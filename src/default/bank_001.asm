@@ -5,7 +5,7 @@
 
 SECTION "ROM Bank $001", ROMX[$4000], BANK[$1]
 Init::
-IF DEF(MENU_61)
+IF DEF(ENABLE_LCD_CONDITION)
     call z, EnableLCD
 ELSE
     call EnableLCD
@@ -49,9 +49,9 @@ ENDC
     ld [wSelectedPage], a
     ld [wMaxItemInCurrentPage], a
     ld [wSelectedROMinPage], a
-    ld a, NUM_ITEMS_SETTING
+    ld a, NUMBER_OF_ROMS
     ld [wNumItems], a
-    ld a, NUM_PAGES_SETTING
+    ld a, NUMBER_OF_PAGES
     ld [wNumPages], a
     call Call_001_42b3
 IF DEF(MENU_64_CN)
@@ -115,7 +115,7 @@ Jump_001_4097:
     cp $80
     jp nz, Jump_001_409f
 
-IF DEF(MENU_61) || DEF(MENU_108)
+IF DEF(EXTRA_HRAMCHECKS)
     jp LoadAndRunHRAMCode2_
 ELSE
     jp LoadAndRunHRAMCode
@@ -127,7 +127,7 @@ IF !DEF(MENU_64_CN)
     cp $10
     jp nz, Jump_001_4065_
 
-IF DEF(MENU_61) || DEF(MENU_108)
+IF DEF(EXTRA_HRAMCHECKS)
     jp LoadAndRunHRAMCode2_
 ELSE
     jp LoadAndRunHRAMCode
@@ -146,7 +146,7 @@ IF DEF(MENU_108_CN)
     call ClearVRAM
 ENDC
     di
-IF DEF(MENU_61) || DEF(MENU_108)
+IF DEF(EXTRA_HRAMCHECKS)
     ld hl, HRAMCode3
 ELSE
     ld hl, HRAMCode
@@ -163,7 +163,7 @@ ENDC
     jp nz, .copy_loop
     jp $ff80
 
-IF DEF(MENU_61) || DEF(MENU_108)
+IF DEF(EXTRA_HRAMCHECKS)
 LoadAndRunHRAMCode2:
     di
     ld hl, HRAMCode2
@@ -671,7 +671,7 @@ Jump_001_4266:
 
 IF !DEF(MENU_CN) && !DEF(MENU_108_CN)
 MenuTitle::
-    db {s:MENU_TITLE}
+    db MENU_TITLE
 
 PrintTitles::
     ld hl, $9822
@@ -704,19 +704,18 @@ Jump_001_4290:
 
 
 Jump_001_429a:
-    ld de, $0014
+    ld de, $0014 ; line length
     ld a, [wSelectedROMinPage]
 
-Jump_001_42a0:
+.is_correct_line_reached
     cp $00
-    jp z, Jump_001_42aa
+    jp z, .correct_line_is_reached
 
     add hl, de
     dec a
-    jp Jump_001_42a0
+    jp .is_correct_line_reached
 
-
-Jump_001_42aa:
+.correct_line_is_reached
     push hl
     pop bc
     ld hl, $9a20
@@ -1414,7 +1413,7 @@ ENDC
         nop
         nop
     ENDC
-    IF DEF(MENU_108)
+    IF DEF(CLEAR_DATA_BEFORE_JUMPING_TO_ROM)
         call ClearWRAM
         call ClearOAM
         call ClearVRAM

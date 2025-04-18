@@ -1,9 +1,9 @@
 MenuText::
-    REPT NUM_ITEMS
+    REPT MAX_ROMS
         db $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff
     ENDR
 
 BottomText::
-    REPT NUM_ITEMS
+    REPT MAX_ROMS
         db $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff
     ENDR

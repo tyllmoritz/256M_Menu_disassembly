@@ -1,19 +1,9 @@
-all: menu.gbc menu_cn.gbc menu_16.gbc menu_18.gbc menu_19.gbc menu_20.gbc menu_22.gbc menu_61.gbc menu_108.gbc menu_64_cn.gbc menu_108_cn.gbc
+rwildcard=$(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
 
-IMAGE_DEPS = src/default/gfx/Super108In.2bpp src/default/gfx/Dots.2bpp src/default/gfx/Font.2bpp src/menu/gfx/Super108In.2bpp src/menu/gfx/Font.2bpp src/menu_cn/gfx/Super108In.2bpp src/menu_cn/gfx/Dots.2bpp src/menu_cn/gfx/Font.2bpp
+ALL_TARGETS := $(wildcard src/*/settings.asm)
+IMAGE_DEPS = $(patsubst %.png,%.2bpp,$(call rwildcard,src/,*.png))
 
-menu_opt        = -p 0 --color-compatible --non-japanese -f h  -t "256MROMSET_0000" --mbc-type MBC5             --old-licensee 0x33 --sgb-compatible --rom-version 2
-menu_cn_opt     = -p 0 --color-compatible --non-japanese -f h  -t "256MROMSET_0000" --mbc-type MBC5             --old-licensee 0x33 --sgb-compatible --rom-version 0x82
-menu_16_opt     = -p 0 --color-compatible --non-japanese -f lh -t "GB HICOL"        --mbc-type MBC1+RAM+BATTERY --old-licensee 0x01
-menu_18_opt     = -p 0 --color-compatible --non-japanese -f lh -t "GB HICOL"        --mbc-type MBC1+RAM+BATTERY --old-licensee 0x01 --ram-size 0x01
-menu_19_opt     = -p 0 --color-compatible --non-japanese -f lh -t "GB HICOL"        --mbc-type MBC1+RAM+BATTERY --old-licensee 0x01 --ram-size 0x01
-menu_20_opt     = -p 0 --color-compatible --non-japanese -f lh -t "GB HICOL"        --mbc-type MBC1+RAM+BATTERY --old-licensee 0x01 --ram-size 0x01
-menu_22_opt     = -p 0 --color-compatible --non-japanese -f lh -t "GB HICOL"        --mbc-type MBC1+RAM+BATTERY --old-licensee 0x01
-menu_61_opt     = -p 0 --color-compatible --non-japanese -f lh -t "GB HICOL"        --mbc-type MBC1+RAM+BATTERY --old-licensee 0x01
-menu_64_cn_opt  = -p 0 --color-compatible --non-japanese -f lh -t "GB HiCol"        --mbc-type MBC1+RAM+BATTERY --old-licensee 0x01
-menu_108_opt    = -p 0 --color-compatible --non-japanese -f lh -t "GB HICOL"        --mbc-type MBC1+RAM+BATTERY --old-licensee 0x01
-menu_108_cn_opt = -p 0 --color-compatible --non-japanese -f lh -t "GB HiCol"        --mbc-type MBC1+RAM+BATTERY --old-licensee 0x01
-
+all: $(patsubst src/%/settings.asm,%.gbc,$(ALL_TARGETS))
 
 %.2bpp: %.png
 	rgbgfx -o $@ $<
@@ -26,11 +16,13 @@ menu_108_cn_opt = -p 0 --color-compatible --non-japanese -f lh -t "GB HiCol"    
 
 %.gbc: src/%.o
 	rgblink -n $*.sym -m $*.map -o $@ $<
-	rgbfix $($*_opt) $@
+	rgbfix $(shell sed -n 's/^; rgbfix-options: \(.*\)$$/\1/p' src/$*/settings.asm) $@
 
 	@if which md5sum &>/dev/null; then md5sum $@; else md5 $@; fi
 
 clean:
-	rm -f src/menu{,_16,_18,_19,_20,_22,_61,_108,_cn,_64_cn,_108_cn}.o
-	rm -f menu{,_16,_18,_19,_20,_22,_61,_108,_cn,_64_cn,_108_cn}.{gbc,sym,map}
-	find . \( -iname '*.1bpp' -o -iname '*.2bpp' \) -exec rm {} +
+	rm -f $(patsubst %/settings.asm,%.o,$(ALL_TARGETS)) \
+	      $(patsubst src/%/settings.asm,%.gbc,$(ALL_TARGETS)) \
+	      $(patsubst src/%/settings.asm,%.sym,$(ALL_TARGETS)) \
+	      $(patsubst src/%/settings.asm,%.map,$(ALL_TARGETS)) \
+	      $(IMAGE_DEPS)

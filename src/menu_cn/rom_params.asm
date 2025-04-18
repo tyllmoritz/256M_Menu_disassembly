@@ -1,4 +1,4 @@
 MenuParam::
-    REPT NUM_ITEMS + 1
+    REPT MAX_ROMS + 1
         db $ff, $ff, $ff, $ff
     ENDR
